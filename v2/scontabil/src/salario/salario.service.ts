@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Salario } from './entitys/salario.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateSalarioDto } from './dtos/create-salario.dto';
-// import { DB as AppDataSource } from '../app-data-source';
 @Injectable()
 export class SalarioService {
   constructor(
@@ -16,19 +15,26 @@ export class SalarioService {
   }
 
   async getSalario(id: string): Promise<Salario> {
-    return await this.AppDataSource.findOne({
+    const response = await this.AppDataSource.findOne({
       where: {
         idsalario: parseInt(id),
       },
     });
+    if (response) {
+      return response;
+    }
+    throw new NotFoundException('dados não encontrados');
   }
 
   async save(createSalarioDto: CreateSalarioDto): Promise<void> {
-    const { valor } = createSalarioDto;
-    const data = new Date();
+    const { valor, data } = createSalarioDto;
+
+    const dataDB = new Date();
+    const DBdata = dataDB.toISOString();
+
     const response = await this.AppDataSource.save({
       valor: valor,
-      data: data.toISOString(),
+      data: data ? data : DBdata,
     });
     console.log(response);
   }
